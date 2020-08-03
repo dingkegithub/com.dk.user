@@ -1,0 +1,82 @@
+syntax = "proto3";
+package userpb;
+
+/**
+ * 用户数据访问层接口服务
+ */
+service UserDasService {
+    /**
+     * 创建用户
+     */
+    rpc Create(RegisterRequest) returns (RegisterResponse) {}
+
+    /**
+     * 获取用户详情
+     */
+    rpc Retrieve(RetrieveRequest) returns (RetrieveResponse) {}
+
+    /**
+     * 查询用户列表
+     */
+    rpc List(ListRequest) returns (ListResponse) {}
+
+    /**
+     * 更新用户
+     */
+    rpc Update(UpdateRequest) returns (UpdateResponse) {}
+}
+
+message UserData {
+    string Uid = 1;
+    string Name = 2;
+}
+
+message RegisterRequest {
+    string Uid = 1;
+    string Name = 2;
+    string Pwd = 3;
+}
+
+message RegisterResponse {
+    int64 Err = 1;
+    string msg = 2;
+    UserData data = 3;
+}
+
+message RetrieveRequest {
+    string Uid = 1;
+}
+
+message RetrieveResponse {
+    int64 Err = 1;
+    string msg = 2;
+    UserData data = 3;
+}
+
+message KvItem {
+    string Key = 1;
+    string Val = 2;
+}
+
+message ListRequest {
+    int64 Limit = 1;
+    int64 Offset = 2;
+    repeated KvItem Qs = 3;
+}
+
+message ListResponse {
+    int64 Err = 1;
+    string msg = 2;
+    repeated UserData Data = 3;
+}
+
+message UpdateRequest {
+    string Uid = 1;
+    repeated KvItem Data = 2;
+}
+
+message UpdateResponse {
+    int64 Err = 1;
+    string msg = 2;
+    UserData Data = 3;
+}
