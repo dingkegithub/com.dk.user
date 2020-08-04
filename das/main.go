@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/das/common/localcfg"
 	"github.com/dingkegithub/com.dk.user/das/endpoints"
 	"github.com/dingkegithub/com.dk.user/das/model"
 	"github.com/dingkegithub/com.dk.user/das/proto/userpb"
@@ -12,8 +13,11 @@ import (
 	"github.com/dingkegithub/com.dk.user/das/transport"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos"
+	"github.com/dingkegithub/com.dk.user/utils/logging"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/zap"
 	"github.com/go-kit/kit/sd"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"math/rand"
 	"net"
@@ -23,7 +27,7 @@ import (
 )
 
 var (
-	ServiceName = "UserDasService"
+	ServiceName = "userpb.UserDasService"
 )
 
 
@@ -34,23 +38,36 @@ func main() {
 	flag.Parse()
 	host := flag.String("host", "127.0.0.1", "-h x.x.x.x --host=x.x.x.x")
 	port := flag.Uint("port", 8080, "-p x or --port=x")
+	cfgFile := flag.String("config", "", "-c xxx.json --config=xxx.json")
 
-	var logging log.Logger
-	{
-		logging = log.NewLogfmtLogger(os.Stderr)
+	if *cfgFile == "" {
+		panic("need option -c xxx.json or --config=xxx.json")
 	}
 
-	logging.Log("service", ServiceName, "status", "init model")
+	_, err := localcfg.NewCfgLoader(*cfgFile)
+	if err != nil {
+		panic(fmt.Sprintf("config file error %s", err.Error()))
+	}
+
+	cfgH := localcfg.GetCfg()
+
+	var logger log.Logger
+	{
+		logCfg := cfgH.GetLogCfg()
+		zapLogger := logging.LogInit(logCfg.FileName, logCfg.MaxSize, logCfg.MaxBackups, logCfg.MaxAge, logCfg.Level)
+		logger = zap.NewZapSugarLogger(zapLogger, zapcore.Level(logCfg.Level-1))
+	}
+
+	logger.Log("file", "main.go", "function", "main", "service", ServiceName, "status", "init model")
 	model.Init("root", "123456", "user")
 
-	logging.Log("service", ServiceName, "status", "init service")
+	logger.Log("file", "main.go", "function", "main", "service", ServiceName, "status", "init service")
 	var svc service.UserSvc
 	{
 		svc = impl.NewUserSvc()
-		//svc = middleware.LoggingMiddleware(logging)(svc)
 	}
 
-	logging.Log("service", ServiceName, "status", "register service")
+	logger.Log("file", "main.go", "function", "main", "service", ServiceName, "status", "register service")
 	ends := endpoints.NewUsrEndpoints(svc)
 	handler := transport.NewRpcUsrSvc(ctx, ends)
 
@@ -69,16 +86,16 @@ func main() {
 			Healthy:     "",
 		}
 
-		//nacosCli, err := kitnacos.NewDefaultClient("public", "/Users/dk/github/nacos/nacos/mydata", "127.0.0.1", 8848, logging)
-		nacosCli, err := kitnacos.NewDefaultClient(2, "/Users/dk/github/nacos/nacos/mydata", logging, "127.0.0.1:8848")
+		nacosCli, err := kitnacos.NewDefaultClient(2,
+			"/Users/dk/github/nacos/nacos/mydata", logger, "127.0.0.1:8848")
 		if err != nil {
-			logging.Log("register_cli", err, "status", "panic exit")
+			logger.Log("file", "main.go", "function", "main", "register_cli", err, "status", "panic exit")
 			panic(err)
 		}
 
-		discoverCli, err = kitnacos.NewRegistrar(nacosCli, svcMeta, logging)
+		discoverCli, err = kitnacos.NewRegistrar(nacosCli, svcMeta, logger)
 		if err != nil {
-			logging.Log("register", err, "status", "panic exit")
+			logger.Log("file", "main.go", "function", "main", "register", err, "status", "panic exit")
 			panic(err)
 		}
 
@@ -92,10 +109,10 @@ func main() {
 		rpcServer := grpc.NewServer()
 		userpb.RegisterUserDasServiceServer(rpcServer, handler)
 
-		logging.Log("service", "UserDasService", "listen", lisAddr)
+		logger.Log("file", "main.go", "function", "main", "service", "UserDasService", "listen", lisAddr)
 		err := rpcServer.Serve(ls)
 		if err != nil {
-			logging.Log("service", "UserDasService", "status", "exit", "error", err)
+			logger.Log("file", "main.go", "function", "main", "service", "UserDasService", "status", "exit", "error", err)
 			errChan <- fmt.Errorf("%s", err.Error())
 		}
 	}()
@@ -107,6 +124,5 @@ func main() {
 	}()
 
 	<-errChan
-	fmt.Println("program exit")
-	logging.Log("service", "UserDasService", "listen", lisAddr)
+	logger.Log("file", "main.go", "function", "main", "service", "UserDasService", "listen", lisAddr)
 }
