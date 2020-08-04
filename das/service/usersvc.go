@@ -1,8 +1,8 @@
 package service
 
 import (
-	"com.dk.user/das/model"
 	"context"
+	"github.com/dingkegithub/com.dk.user/das/model"
 )
 
 type UserSvc interface {

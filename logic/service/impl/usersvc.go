@@ -1,9 +1,9 @@
 package impl
 
 import (
-	"com.dk.user/logic/service"
 	"context"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/logic/service"
 	"github.com/go-kit/kit/log"
 	"github.com/hashicorp/go-uuid"
 	"golang.org/x/crypto/bcrypt"

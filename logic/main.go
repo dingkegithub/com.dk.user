@@ -1,15 +1,15 @@
 package main
 
 import (
-	usrep "com.dk.user/logic/endpoints"
-	"com.dk.user/logic/proxymiddleware"
-	"com.dk.user/logic/service/impl"
-	usrtr "com.dk.user/logic/transports"
-	"com.dk.user/sidecar/discovery"
-	"com.dk.user/sidecar/discovery/kitnacos"
 	"context"
 	"flag"
 	"fmt"
+	usrep "github.com/dingkegithub/com.dk.user/logic/endpoints"
+	"github.com/dingkegithub/com.dk.user/logic/proxymiddleware"
+	"github.com/dingkegithub/com.dk.user/logic/service/impl"
+	usrtr "github.com/dingkegithub/com.dk.user/logic/transports"
+	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
+	"github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd"
 	"math/rand"

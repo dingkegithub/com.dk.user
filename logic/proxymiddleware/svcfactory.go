@@ -1,12 +1,12 @@
 package proxymiddleware
 
 import (
-	"com.dk.user/das/proto/userpb"
-	"com.dk.user/logic/service"
-	"com.dk.user/sidecar/discovery"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/das/proto/userpb"
+	"github.com/dingkegithub/com.dk.user/logic/service"
+	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/ratelimit"

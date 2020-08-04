@@ -1,7 +1,7 @@
 package http
 
 import (
-	"com.dk.user/utils/osutils"
+	"github.com/dingkegithub/com.dk.user/utils/osutils"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"

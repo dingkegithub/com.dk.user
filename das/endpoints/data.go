@@ -1,6 +1,6 @@
 package endpoints
 
-import "com.dk.user/das/model"
+import "github.com/dingkegithub/com.dk.user/das/model"
 
 
 type UsrCreateRequest struct {

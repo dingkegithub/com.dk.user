@@ -1,8 +1,8 @@
 package http
 
 import (
-	"com.dk.user/utils/netutils"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/utils/netutils"
 	"github.com/go-kit/kit/log"
 	"sync"
 	"time"

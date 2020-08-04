@@ -1,10 +1,10 @@
 package transport
 
 import (
-	"com.dk.user/das/endpoints"
-	"com.dk.user/das/proto/userpb"
 	"context"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/das/endpoints"
+	"github.com/dingkegithub/com.dk.user/das/proto/userpb"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"time"
 )

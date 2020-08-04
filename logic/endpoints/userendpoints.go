@@ -1,9 +1,9 @@
 package endpoints
 
 import (
-	"com.dk.user/logic/service"
 	"context"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/logic/service"
 	"github.com/go-kit/kit/endpoint"
 	"time"
 )

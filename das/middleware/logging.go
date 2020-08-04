@@ -2,9 +2,9 @@ package middleware
 
 
 import (
-	"com.dk.user/das/model"
-	"com.dk.user/das/service"
 	"context"
+	"github.com/dingkegithub/com.dk.user/das/model"
+	"github.com/dingkegithub/com.dk.user/das/service"
 	"github.com/go-kit/kit/log"
 	"time"
 )

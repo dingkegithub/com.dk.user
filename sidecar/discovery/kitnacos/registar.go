@@ -1,7 +1,7 @@
 package kitnacos
 
 import (
-	"com.dk.user/sidecar/discovery"
+	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd"
 )

@@ -1,9 +1,9 @@
 package kitnacos
 
 import (
-	"com.dk.user/sidecar/discovery"
-	nacoshttp "com.dk.user/sidecar/discovery/kitnacos/http"
 	"encoding/json"
+	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
+	nacoshttp "github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos/http"
 	"github.com/go-kit/kit/log"
 	"github.com/nacos-group/nacos-sdk-go/model"
 	"sync"

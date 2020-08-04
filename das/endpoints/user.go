@@ -1,10 +1,10 @@
 package endpoints
 
 import (
-	"com.dk.user/das/model"
-	"com.dk.user/das/service"
 	"context"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/das/model"
+	"github.com/dingkegithub/com.dk.user/das/service"
 	"github.com/go-kit/kit/endpoint"
 	"time"
 )

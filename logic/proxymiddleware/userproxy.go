@@ -1,9 +1,9 @@
 package proxymiddleware
 
 import (
-	"com.dk.user/logic/service"
-	"com.dk.user/sidecar/discovery/kitnacos"
 	"context"
+	"github.com/dingkegithub/com.dk.user/logic/service"
+	"github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd"

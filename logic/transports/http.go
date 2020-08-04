@@ -1,8 +1,8 @@
 package transports
 
 import (
-	usrep "com.dk.user/logic/endpoints"
 	"context"
+	usrep "github.com/dingkegithub/com.dk.user/logic/endpoints"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/transport"
 	kithttp "github.com/go-kit/kit/transport/http"

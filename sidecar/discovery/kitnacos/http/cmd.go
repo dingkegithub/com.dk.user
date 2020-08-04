@@ -1,9 +1,9 @@
 package http
 
 import (
-	"com.dk.user/utils/netutils"
 	"encoding/json"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/utils/netutils"
 	"io/ioutil"
 	"net/http"
 )
