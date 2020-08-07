@@ -26,9 +26,9 @@ func IsFile(path string) bool {
 
 func Mkdir(p string, reverse bool) error {
 	if reverse {
-		return os.Mkdir(p, 0766)
-	} else {
 		return os.MkdirAll(p, 0766)
+	} else {
+		return os.Mkdir(p, 0766)
 	}
 }
 

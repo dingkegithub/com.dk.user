@@ -33,7 +33,7 @@ type ServiceFactory struct {
 // @return endpoint 站点信息
 // @return io.Closer 站点失效后如何关闭
 //
-func NewServiceFactory(instance string) (endpoint.Endpoint, io.Closer, error)  {
+func NewServiceFactory(instance string) (endpoint.Endpoint, io.Closer, error) {
 	meta := &discovery.ServiceMeta{}
 	err := json.Unmarshal([]byte(instance), &meta)
 	if err != nil {

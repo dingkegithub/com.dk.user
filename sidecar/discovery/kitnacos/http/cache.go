@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/dingkegithub/com.dk.user/utils/osutils"
 	"github.com/go-kit/kit/log"
@@ -64,6 +65,12 @@ func (lc *LocalCache) Store(name string, inst *CacheInstance) error {
 
 	s, ok := lc.instance[name]
 	if ok {
+		lc.logger.Log("f", "cache.go",
+			"func", "Store",
+			"size", len(inst.Instances),
+			"cmile", s.Mils,
+			"smile", inst.Mils)
+
 		if s.Mils == inst.Mils {
 			return nil
 		}
@@ -75,6 +82,7 @@ func (lc *LocalCache) Store(name string, inst *CacheInstance) error {
 	}
 
 	b, err := json.Marshal(inst.Instances)
+	fmt.Println("marshal str: ", string(b))
 	if err != nil {
 		return nil
 	}
@@ -94,11 +102,11 @@ func (lc *LocalCache) Store(name string, inst *CacheInstance) error {
 		}
 	}
 
-	f, err := os.OpenFile(lc.cacheFile, os.O_WRONLY, 0644)
+	f, err := os.OpenFile(lc.cacheFile, os.O_WRONLY | os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("write body: ", string(body))
 	size, err := f.Write(body)
 	if err != nil {
 		return err

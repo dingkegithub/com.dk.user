@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// nacos naming client
+// nacos http client
 type httpClient struct {
 	cmd       *Cmd
 	logger    log.Logger
@@ -25,6 +25,7 @@ type httpClient struct {
 // subscribe callback, subscribe check status of Register Center
 // subscribe will invoke callback listener when it found data update
 func (n *httpClient) listener(mils uint64, name string, m []*discovery.ServiceMeta) {
+
 	ci := &CacheInstance{
 		Mils:      mils,
 		Instances: nil,
@@ -57,12 +58,12 @@ func (n *httpClient) listener(mils uint64, name string, m []*discovery.ServiceMe
 		return
 	}
 
+	n.logger.Log("file", "httpclient.go",
+		"function", "listener",
+		"action", "push instance",
+		"svc", name)
 	n.subMutex.Lock()
 	defer n.subMutex.Unlock()
-	n.logger.Log("file", "httpclient.go",
-		"function", "Watch",
-		"action", "add watcher",
-		"svc", name)
 	n.subChan[name] <- m
 }
 
@@ -72,13 +73,14 @@ func (n *httpClient) listener(mils uint64, name string, m []*discovery.ServiceMe
 func (n *httpClient) Watch(svc *discovery.ServiceMeta) <-chan []*discovery.ServiceMeta {
 	svcId := fmt.Sprintf("%s-%s-%s", svc.SvcName, svc.Cluster, svc.Group)
 
-	n.subMutex.Lock()
-	defer n.subMutex.Unlock()
-
 	n.logger.Log("file", "httpclient.go",
 		"function", "Watch",
 		"action", "add watcher",
 		"svc", svcId)
+
+	n.subMutex.Lock()
+	defer n.subMutex.Unlock()
+
 	if _, ok := n.subChan[svcId]; !ok {
 		ch := make(chan []*discovery.ServiceMeta)
 		n.subChan[svcId] = ch
@@ -109,6 +111,7 @@ func (n *httpClient) CancelWatch(svc *discovery.ServiceMeta) {
 func (n *httpClient) closeSubscribe()  {
 	n.subMutex.Lock()
 	defer n.subMutex.Unlock()
+
 	for k, v := range n.subChan {
 		close(v)
 		delete(n.subChan, k)
@@ -250,8 +253,8 @@ func (n *httpClient) Deregister(svc *discovery.ServiceMeta) error {
 // query healthy service list
 func (n *httpClient) GetServices(svc *discovery.ServiceMeta) ([]*discovery.ServiceMeta, error) {
 
-	n.logger.Log("file", "httpclient.go",
-		"function", "GetServices",
+	n.logger.Log("f", "httpclient.go",
+		"func", "GetServices",
 		"service", svc.SvcName,
 		"cluster", svc.Cluster,
 		"group", svc.Group)
@@ -264,23 +267,21 @@ func (n *httpClient) GetServices(svc *discovery.ServiceMeta) ([]*discovery.Servi
 		HealthyOnly: true,
 	})
 
+	insts := make([]*discovery.ServiceMeta, 0, len(l.Hosts))
+
 	// register center down
 	if err != nil {
 		err := n.cache.Load()
 		if err != nil {
-			n.logger.Log("file", "httpclient.go",
-				"function", "GetServices",
+			n.logger.Log("f", "httpclient.go",
+				"func", "GetServices",
 				"action", "load service from local cache",
 				"error", err)
-			return nil, err
+			return insts, nil
 		}
 
 		serviceId := fmt.Sprintf("%s-%s-%s", svc.SvcName, svc.Cluster, svc.Group)
 		instanceList := n.cache.Instance(serviceId)
-		if len(instanceList.Instances) == 0 {
-			return nil, ErrNotFoundHealthyNode
-		}
-
 		return instanceList.Instances, nil
 	}
 
@@ -289,7 +290,6 @@ func (n *httpClient) GetServices(svc *discovery.ServiceMeta) ([]*discovery.Servi
 		Instances: nil,
 	}
 
-	insts := make([]*discovery.ServiceMeta, 0, len(l.Hosts))
 	for _, v := range l.Hosts {
 		i := &discovery.ServiceMeta{
 			Ver:     svc.Ver,
@@ -311,7 +311,8 @@ func (n *httpClient) GetServices(svc *discovery.ServiceMeta) ([]*discovery.Servi
 
 	ci.Instances = insts
 
-	n.cache.Store(svc.SvcName, ci)
+	svcId := fmt.Sprintf("%s-%s-%s", svc.SvcName, svc.Cluster, svc.Group)
+	n.cache.Store(svcId, ci)
 
 	return ci.Instances, nil
 }

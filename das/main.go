@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/das/common"
 	"github.com/dingkegithub/com.dk.user/das/common/localcfg"
 	"github.com/dingkegithub/com.dk.user/das/endpoints"
 	"github.com/dingkegithub/com.dk.user/das/model"
@@ -28,9 +29,6 @@ import (
 	"syscall"
 )
 
-var (
-	ServiceName = "userpb.UserDasService"
-)
 
 
 func main() {
@@ -60,16 +58,16 @@ func main() {
 		logger = zap.NewZapSugarLogger(zapLogger, zapcore.Level(logCfg.Level-1))
 	}
 
-	logger.Log("file", "main.go", "function", "main", "service", ServiceName, "status", "init model")
+	logger.Log("file", "main.go", "function", "main", "service", common.ServiceName, "status", "init model")
 	model.Init("root", "123456", "user")
 
-	logger.Log("file", "main.go", "function", "main", "service", ServiceName, "status", "init service")
+	logger.Log("file", "main.go", "function", "main", "service", common.ServiceName, "status", "init service")
 	var svc service.UserSvc
 	{
 		svc = impl.NewUserSvc()
 	}
 
-	logger.Log("file", "main.go", "function", "main", "service", ServiceName, "status", "register service")
+	logger.Log("file", "main.go", "function", "main", "service", common.ServiceName, "status", "register service")
 	ends := endpoints.NewUsrEndpoints(svc)
 	handler := transport.NewRpcUsrSvc(ctx, ends)
 
@@ -79,7 +77,7 @@ func main() {
 		svcMeta := &discovery.ServiceMeta{
 			Ip:      *host,
 			Port:    uint16(*port),
-			SvcName: ServiceName,
+			SvcName: common.ServiceName,
 			SvcId:   svcId,
 			Weight:  0,
 			Group:   "default",
@@ -92,7 +90,7 @@ func main() {
 			},
 		}
 
-		clusterNodeManager, err := netutils.NewClusterNodeManager(5, "127.0.0.1:8848")
+		clusterNodeManager, err := netutils.NewClusterNodeManager(5, logger, "127.0.0.1:8848")
 		if err != nil {
 			logger.Log("file", "main.go",
 				"function", "main",
@@ -102,7 +100,7 @@ func main() {
 		}
 
 		nacosCli, err := nacoshttp.NewDefaultClient(
-			"/Users/dk/github/nacos/nacos/mydata", logger, clusterNodeManager)
+			"/tmp/discovery/das", logger, clusterNodeManager)
 		if err != nil {
 			logger.Log("file", "main.go", "function", "main", "register_cli", err, "status", "panic exit")
 			panic(err)

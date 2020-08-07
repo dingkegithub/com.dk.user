@@ -64,7 +64,7 @@ func main() {
 	}
 
 	nacosCli, err := nacoshttp.NewDefaultClient(
-		"/Users/dk/github/nacos/nacos/mydata", logger, clusterNodeManager)
+		"/tmp/discovery/logic", logger, clusterNodeManager)
 	if err != nil {
 		logger.Log("file", "main.go",
 			"function", "main",

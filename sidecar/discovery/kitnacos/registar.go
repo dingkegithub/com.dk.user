@@ -4,6 +4,7 @@ import (
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd"
+	"time"
 )
 
 type Registrar struct {
@@ -13,12 +14,26 @@ type Registrar struct {
 }
 
 func (r *Registrar) Register() {
-	err := r.cli.Register(r.service)
-	if err != nil {
-		r.logger.Log("file", "registar.go", "function", "Register", "service", r.service.SvcName, "error", err)
-	} else {
-		r.logger.Log("file", "registar.go", "function", "Register", "service", r.service.SvcName, "register", "ok")
-	}
+	go func() {
+		for {
+			err := r.cli.Register(r.service)
+			if err != nil {
+				r.logger.Log("f", "registar.go",
+					"func", "Register",
+					"service", r.service.SvcName,
+					"action", "register failed",
+					"error", err)
+				time.Sleep(5 * time.Second)
+			} else {
+				break
+			}
+		}
+		r.logger.Log("f", "registar.go",
+			"func", "Register",
+			"service", r.service.SvcName,
+			"register", "success")
+	}()
+
 }
 
 func (r *Registrar) Deregister() {
