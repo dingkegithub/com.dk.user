@@ -13,7 +13,9 @@ import (
 	"github.com/dingkegithub/com.dk.user/das/transport"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos"
+	nacoshttp "github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos/http"
 	"github.com/dingkegithub/com.dk.user/utils/logging"
+	"github.com/dingkegithub/com.dk.user/utils/netutils"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/zap"
 	"github.com/go-kit/kit/sd"
@@ -35,10 +37,10 @@ func main() {
 	ctx := context.Background()
 	errChan := make(chan error)
 
-	flag.Parse()
 	host := flag.String("host", "127.0.0.1", "-h x.x.x.x --host=x.x.x.x")
 	port := flag.Uint("port", 8080, "-p x or --port=x")
 	cfgFile := flag.String("config", "", "-c xxx.json --config=xxx.json")
+	flag.Parse()
 
 	if *cfgFile == "" {
 		panic("need option -c xxx.json or --config=xxx.json")
@@ -75,19 +77,32 @@ func main() {
 	{
 		svcId := fmt.Sprintf("%s-%d", "UserDas", rand.Int())
 		svcMeta := &discovery.ServiceMeta{
-			Ip:          *host,
-			Port:        uint16(*port),
-			SvcName:     ServiceName,
-			SvcId:       svcId,
-			Weight:      0,
-			Group:       "default",
-			ClusterName: "default",
-			Check:       true,
-			Healthy:     "",
+			Ip:      *host,
+			Port:    uint16(*port),
+			SvcName: ServiceName,
+			SvcId:   svcId,
+			Weight:  0,
+			Group:   "default",
+			Cluster: "default",
+			Check:   true,
+			Healthy: "",
+			Meta: map[string]interface{}{
+				"idc": "ChongQing",
+				"need_login": false,
+			},
 		}
 
-		nacosCli, err := kitnacos.NewDefaultClient(2,
-			"/Users/dk/github/nacos/nacos/mydata", logger, "127.0.0.1:8848")
+		clusterNodeManager, err := netutils.NewClusterNodeManager(5, "127.0.0.1:8848")
+		if err != nil {
+			logger.Log("file", "main.go",
+				"function", "main",
+				"action", "init cluster manager",
+				"error", err)
+			panic(err)
+		}
+
+		nacosCli, err := nacoshttp.NewDefaultClient(
+			"/Users/dk/github/nacos/nacos/mydata", logger, clusterNodeManager)
 		if err != nil {
 			logger.Log("file", "main.go", "function", "main", "register_cli", err, "status", "panic exit")
 			panic(err)

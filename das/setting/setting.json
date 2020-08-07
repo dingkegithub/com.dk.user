@@ -1,0 +1,17 @@
+{
+  "log": {
+    "level": 0,
+    "max_age": 3,
+    "max_size": 2000000,
+    "file_name": "/tmp/das.log",
+    "max_backups": 3
+  },
+
+  "apollo": {
+    "app_id": "",
+    "cfg_server": "",
+    "cluster": "",
+    "local_bak": "",
+    "name_spaces": []
+  }
+}

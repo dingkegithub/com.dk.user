@@ -9,6 +9,7 @@ import (
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/ratelimit"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/sony/gobreaker"
@@ -22,6 +23,7 @@ type ServiceFactory struct {
 	instance string
 	meta *discovery.ServiceMeta
 	conn *grpc.ClientConn
+	logger log.Logger
 }
 
 
@@ -39,10 +41,17 @@ func NewServiceFactory(instance string) (endpoint.Endpoint, io.Closer, error)  {
 	}
 
 	hostPort := fmt.Sprintf("%s:%d", meta.Ip, meta.Port)
-	fmt.Println("file", "svcfactory.go", "function", "NewServiceFactory", "action", "dialling", "addr", hostPort)
+	fmt.Println("file", "svcfactory.go",
+		"function", "NewServiceFactory",
+		"action", "dialling",
+		"addr", hostPort)
+
 	conn, err := grpc.Dial(hostPort, grpc.WithInsecure())
 	if err != nil {
-		fmt.Println("file", "svcfactory.go", "function", "NewServiceFactory", "action", "dial", "error", err)
+		fmt.Println("file", "svcfactory.go",
+			"function", "NewServiceFactory",
+			"action", "dial",
+			"error", err)
 		return nil, nil, err
 	}
 
@@ -69,7 +78,10 @@ func (sf *ServiceFactory) Endpoint() endpoint.Endpoint {
 			decodeRegisterRpcResponse,
 			&userpb.RegisterResponse{},
 		).Endpoint()
-		fmt.Println("file", "svcfactory.go", "function", "Endpoint", "action", "NewClient", "svc", sf.meta.SvcName)
+		fmt.Println("file", "svcfactory.go",
+			"function", "Endpoint",
+			"action", "NewClient",
+			"svc", sf.meta.SvcName)
 	}
 
 	qps  := 100
@@ -81,7 +93,10 @@ func (sf *ServiceFactory) Endpoint() endpoint.Endpoint {
 // 站点关闭
 //
 func (sf *ServiceFactory) Close() error {
-	fmt.Println("file", "svcfactory.go", "function", "close", "action", "close endpoint", "endpoint", sf.instance)
+	fmt.Println("file", "svcfactory.go",
+		"function", "close",
+		"action", "close endpoint",
+		"endpoint", sf.instance)
 	return sf.conn.Close()
 }
 

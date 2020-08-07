@@ -4,17 +4,52 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dingkegithub/com.dk.user/utils/netutils"
+	"github.com/go-kit/kit/log"
 	"io/ioutil"
 	"net/http"
 )
 
-func CmdCreateInstance(url string, req *RegisterInstanceRequest) error {
+type Cmd struct {
+	logger log.Logger
+	nm *netutils.ClusterNodeManager
+}
+
+func NewCmd(logger log.Logger, nm *netutils.ClusterNodeManager) *Cmd {
+	return &Cmd{
+		logger: logger,
+		nm:     nm,
+	}
+}
+
+func (cmd *Cmd) Close() {
+	cmd.nm.Close()
+}
+
+func (cmd *Cmd) buildUrl() string {
+	nodeUrl, err := cmd.nm.Random()
+	if err != nil {
+		cmd.logger.Log("file", "cmd.go",
+			"function", "buildUrl",
+			"action", "random cluster node",
+			"error", err)
+		return ""
+	}
+
+	return fmt.Sprintf("http://%s", nodeUrl)
+}
+
+
+func (cmd *Cmd)CmdCreateInstance(req *RegisterInstanceRequest) error {
+	url := cmd.buildUrl()
+	if url == "" {
+		return ErrNotFoundHealthyNode
+	}
+
 	queryValue, err := netutils.StructToUrl(req)
 	if err != nil {
 		return err
 	}
 	absUrl := fmt.Sprintf("%s/nacos/v1/ns/instance?%s", url, queryValue.Encode())
-	fmt.Println("cmd create instance url: ", absUrl)
 	resp, err := http.DefaultClient.Post(absUrl, "application/x-www-form-urlencode", nil)
 	if err != nil {
 		return err
@@ -32,7 +67,13 @@ func CmdCreateInstance(url string, req *RegisterInstanceRequest) error {
 
 	return fmt.Errorf("%s", string(body))
 }
-func CmdDeleteInstance(url string, req *DeregisterInstanceRequest) error {
+
+func (cmd *Cmd)CmdDeleteInstance(req *DeregisterInstanceRequest) error {
+	url := cmd.buildUrl()
+	if url == "" {
+		return ErrNotFoundHealthyNode
+	}
+
 	queryValue, err := netutils.StructToUrl(req)
 	if err != nil {
 		return err
@@ -64,7 +105,12 @@ func CmdDeleteInstance(url string, req *DeregisterInstanceRequest) error {
 }
 
 
-func CmdUpdateInstance(url string, req *ModifyInstanceRequest) error {
+func (cmd *Cmd)CmdUpdateInstance(req *ModifyInstanceRequest) error {
+	url := cmd.buildUrl()
+	if url == "" {
+		return ErrNotFoundHealthyNode
+	}
+
 	queryValue, err := netutils.StructToUrl(req)
 	if err != nil {
 		return err
@@ -95,13 +141,17 @@ func CmdUpdateInstance(url string, req *ModifyInstanceRequest) error {
 	return fmt.Errorf("%s", string(body))
 }
 
-func CmdListInstance(url string, req *ListInstanceRequest) (*ListInstanceResponse, error) {
+func (cmd *Cmd)CmdListInstance(req *ListInstanceRequest) (*ListInstanceResponse, error) {
+	url := cmd.buildUrl()
+	if url == "" {
+		return nil, ErrNotFoundHealthyNode
+	}
+
 	queryValue, err := netutils.StructToUrl(req)
 	if err != nil {
 		return nil, err
 	}
 	absUrl := fmt.Sprintf("%s/nacos/v1/ns/instance/list?%s", url, queryValue.Encode())
-	fmt.Println("URL: ", absUrl)
 
 	request, err := http.NewRequest("GET", absUrl, nil)
 	if err != nil {
@@ -129,13 +179,17 @@ func CmdListInstance(url string, req *ListInstanceRequest) (*ListInstanceRespons
 	return respList, nil
 }
 
-func CmdDetailInstance(url string, req *DetailInstanceRequest) (*DetailInstanceResponse, error) {
+func (cmd *Cmd)CmdDetailInstance(req *DetailInstanceRequest) (*DetailInstanceResponse, error) {
+	url := cmd.buildUrl()
+	if url == "" {
+		return nil, ErrNotFoundHealthyNode
+	}
+
 	queryValue, err := netutils.StructToUrl(req)
 	if err != nil {
 		return nil, err
 	}
 	absUrl := fmt.Sprintf("%s/nacos/v1/ns/instance?%s", url, queryValue.Encode())
-	fmt.Println("URL: ", absUrl)
 
 	request, err := http.NewRequest("GET", absUrl, nil)
 	if err != nil {
@@ -163,7 +217,12 @@ func CmdDetailInstance(url string, req *DetailInstanceRequest) (*DetailInstanceR
 	return detail, nil
 }
 
-func CmdHeartbeatInstance(url string, req *HeartbeatRequest) error {
+func (cmd *Cmd)CmdHeartbeatInstance(req *HeartbeatRequest) error {
+	url := cmd.buildUrl()
+	if url == "" {
+		return ErrNotFoundHealthyNode
+	}
+
 	queryValue, err := netutils.StructToUrl(req)
 	if err != nil {
 		return err
@@ -193,4 +252,3 @@ func CmdHeartbeatInstance(url string, req *HeartbeatRequest) error {
 
 	return fmt.Errorf("%s", string(body))
 }
-

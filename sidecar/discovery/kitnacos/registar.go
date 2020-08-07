@@ -7,7 +7,7 @@ import (
 )
 
 type Registrar struct {
-	cli     Client
+	cli     discovery.Client
 	service *discovery.ServiceMeta
 	logger  log.Logger
 }
@@ -30,9 +30,9 @@ func (r *Registrar) Deregister() {
 	}
 }
 
-func NewRegistrar(cli Client, svc *discovery.ServiceMeta, logger log.Logger) (sd.Registrar, error) {
+func NewRegistrar(cli discovery.Client, svc *discovery.ServiceMeta, logger log.Logger) (sd.Registrar, error) {
 	if cli == nil {
-		return nil, ErrorParam
+		return nil, discovery.ErrorParam
 	}
 
 	return &Registrar {

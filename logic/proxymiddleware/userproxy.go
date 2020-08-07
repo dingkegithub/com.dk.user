@@ -2,7 +2,9 @@ package proxymiddleware
 
 import (
 	"context"
+	"github.com/dingkegithub/com.dk.user/logic/common"
 	"github.com/dingkegithub/com.dk.user/logic/service"
+	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -14,31 +16,31 @@ import (
 //
 // 用户服务代理，在服务至上添加额外功能
 //
-func UserLogicProxy(ctx context.Context, logger log.Logger, servers... string) service.UserLogicServiceMiddleware {
+func UserLogicProxy(ctx context.Context, logger log.Logger, cli discovery.Client) service.UserLogicServiceMiddleware {
 	var (
 		maxAttempts = 3   // 失败尝试次数
 		maxTime     = 250 * time.Millisecond
 	)
 
-	// 服务发现客户端
-	cli, err := kitnacos.NewDefaultClient(
-		3,
-		"/Users/dk/github/nacos/nacos/mydata",
-		logger, servers...)
-
 	// 正常情况下 注册服务有异常，应当直接退出，服务不可用
-	if err != nil {
+	if cli == nil {
 		return func(svc service.UserLogicService) service.UserLogicService {
 			return svc
 		}
 	}
 
 	// 服务发现
-	instance, err := kitnacos.NewInstancer(cli,
-		"UserDasService", "default", "default", logger)
+	instance, err := kitnacos.NewInstancer(
+		cli,
+		&discovery.ServiceMeta{
+			Group:   "default",
+			Cluster: "default",
+			SvcName: common.ServiceUsrDasSrv,
+		},
+		logger)
 
 	if err != nil {
-		logger.Log("file", "userproxy.go", "servers", servers, "error", err)
+		logger.Log("file", "userproxy.go", "error", err)
 		panic(err)
 	}
 

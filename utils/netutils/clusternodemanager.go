@@ -5,6 +5,7 @@ package netutils
 
 import (
 	"fmt"
+	"github.com/dingkegithub/com.dk.user/utils/logging"
 	"net"
 	"strconv"
 	"strings"
@@ -28,45 +29,58 @@ type ClusterNodeManager struct {
 	allNodes        []string      // cluster node addr list: ip:port
 	brokenMutex     sync.RWMutex  // sync lock: allNodes, brokenNodes, availableNodes
 	brokenNodes     []string      // current unavailable cluster node: ip:port
-	availMutex     sync.RWMutex  // sync lock: allNodes, brokenNodes, availableNodes
+	availMutex      sync.RWMutex  // sync lock: allNodes, brokenNodes, availableNodes
 	availableNodes  []string      // current available cluster node: ip:port
-	healthyInterval uint64         // healthy check interval
+	healthyInterval uint64        // healthy check interval
 	idx             uint64        // robin parameter, atomic operate
 	stopCh          chan struct{} // Close signal
+	logger          logging.Logger
 }
 
 //
 // @param servers cluster address list, ip:port
 //
-func NewClusterNodeManager(interval uint64, servers ...string) (*ClusterNodeManager, error) {
+func NewClusterNodeManager(interval uint64, logger logging.Logger, servers ...string) (*ClusterNodeManager, error) {
 	if len(servers) <= 0 {
 		return nil, ErrInvalidCluster
 	}
 
 	cli := &ClusterNodeManager{
-		stopCh:   make(chan struct{}),
-		allNodes: make([]string, 0, len(servers)),
+		stopCh:          make(chan struct{}),
+		allNodes:        make([]string, 0, len(servers)),
 		healthyInterval: interval,
+		logger:          logger,
 	}
 
 	for _, server := range servers {
 		ipPort := strings.Split(server, ":")
 		if len(ipPort) != 2 {
-			fmt.Println("file", "httpclient.go", "function", "NewNacosHttpClient", "action", "check servers", "error", "failed format check")
+			logger.Log("file", "clusternodemanager.go",
+				"function", "NewClusterNodeManager",
+				"action", "check servers",
+				"server", server,
+				"error", "failed format check")
 			continue
 		}
 
 		portStr := ipPort[1]
 		_, err := strconv.ParseUint(portStr, 10, 16)
 		if err != nil {
-			fmt.Println("file", "httpclient.go", "function", "NewNacosHttpClient", "action", "check port", "error", err)
+			logger.Log("file", "clusternodemanager.go",
+				"function", "NewClusterNodeManager",
+				"action", "check port",
+				"port", portStr,
+				"error", err)
 			return nil, err
 		}
 		cli.allNodes = append(cli.allNodes, server)
 	}
 
 	if len(cli.allNodes) <= 0 {
-		fmt.Println("file", "httpclient.go", "function", "NewNacosHttpClient", "action", "check available node", "error", "not found available node")
+		logger.Log("file", "clusternodemanager.go",
+			"function", "NewClusterNodeManager",
+			"action", "check available node",
+			"error", "not found available node")
 		return nil, nil
 	}
 
@@ -96,7 +110,7 @@ func (cnm *ClusterNodeManager) Random() (string, error) {
 //
 // all cluster nodes
 //
-func (cnm *ClusterNodeManager) AllNodes() []string {
+func (cnm *ClusterNodeManager) All() []string {
 	cnm.allMutex.RLock()
 	defer cnm.allMutex.RUnlock()
 	l := make([]string, len(cnm.allNodes))
@@ -107,7 +121,7 @@ func (cnm *ClusterNodeManager) AllNodes() []string {
 //
 // all available cluster nodes
 //
-func (cnm *ClusterNodeManager) AvailableNodes() []string {
+func (cnm *ClusterNodeManager) Available() []string {
 	cnm.availMutex.RLock()
 	defer cnm.availMutex.RUnlock()
 	l := make([]string, len(cnm.availableNodes))
@@ -133,9 +147,16 @@ func (cnm *ClusterNodeManager) heart() {
 		case <-checkChan:
 			cnm.checkAvailableNodes()
 			cnm.checkBrokenNodes()
+			cnm.logger.Log("file", "clusternodemanager.go",
+				"function", "heart",
+				"action", "time check node healthy",
+				"healthy", len(cnm.availableNodes),
+				"ill", len(cnm.brokenNodes))
 
 		case <-cnm.stopCh:
-			fmt.Println("file", "clusternodemanager.go", "function", "heart", "action", "close")
+			cnm.logger.Log("file", "clusternodemanager.go",
+				"function", "heart",
+				"action", "close")
 			break
 		}
 	}
@@ -205,13 +226,19 @@ func (cnm *ClusterNodeManager) setAvailableNodes(node string) {
 func (cnm *ClusterNodeManager) checkSocket(hostPort string) bool {
 	addr, err := net.ResolveTCPAddr("tcp", hostPort)
 	if err != nil {
-		fmt.Println("file", "httpclient.go", "function", "checkSocket", "action", "resolver ip port", "error", err)
+		cnm.logger.Log("file", "clusternodemanager.go",
+			"function", "checkSocket",
+			"action", "resolver ip port",
+			"error", err)
 		return false
 	}
 
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
-		fmt.Println("file", "httpclient.go", "function", "checkSocket", "action", "dial ip port", "error", err)
+		cnm.logger.Log("file", "clusternodemanager.go",
+			"function", "checkSocket",
+			"action", "dial ip port",
+			"error", err)
 		return false
 	}
 	defer conn.Close()
