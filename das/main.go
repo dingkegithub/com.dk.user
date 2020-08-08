@@ -14,7 +14,7 @@ import (
 	"github.com/dingkegithub/com.dk.user/das/transport"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos"
-	nacoshttp "github.com/dingkegithub/com.dk.user/sidecar/discovery/kitnacos/http"
+	nacoshttp "github.com/dingkegithub/com.dk.user/sidecar/discovery/nacos/http"
 	"github.com/dingkegithub/com.dk.user/utils/logging"
 	"github.com/dingkegithub/com.dk.user/utils/netutils"
 	"github.com/go-kit/kit/log"

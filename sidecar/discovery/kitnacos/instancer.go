@@ -9,7 +9,7 @@ import (
 )
 
 type Instancer struct {
-	cli    discovery.Client
+	cli    discovery.RegisterCenterClient
 	logger log.Logger
 	cache  *instance.Cache
 	quitC  chan struct{}
@@ -64,7 +64,7 @@ func (i *Instancer) loop(ev <-chan []*discovery.ServiceMeta) {
 	}
 }
 
-func NewInstancer(cli discovery.Client, meta *discovery.ServiceMeta, logger log.Logger) (sd.Instancer, error) {
+func NewInstancer(cli discovery.RegisterCenterClient, meta *discovery.ServiceMeta, logger log.Logger) (sd.Instancer, error) {
 	inst := &Instancer{
 		cache:  instance.NewCache(),
 		cli:    cli,

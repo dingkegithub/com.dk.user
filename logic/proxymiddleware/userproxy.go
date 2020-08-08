@@ -16,7 +16,7 @@ import (
 //
 // 用户服务代理，在服务至上添加额外功能
 //
-func UserLogicProxy(ctx context.Context, logger log.Logger, cli discovery.Client) service.UserLogicServiceMiddleware {
+func UserLogicProxy(ctx context.Context, logger log.Logger, cli discovery.RegisterCenterClient) service.UserLogicServiceMiddleware {
 	var (
 		maxAttempts = 3   // 失败尝试次数
 		maxTime     = 250 * time.Millisecond

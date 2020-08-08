@@ -1,6 +1,6 @@
 package discovery
 
-type Client interface {
+type RegisterCenterClient interface {
 	Register(svc *ServiceMeta) error
 
 	Deregister(svc *ServiceMeta) error

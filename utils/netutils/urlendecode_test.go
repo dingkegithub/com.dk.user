@@ -49,27 +49,27 @@ func TestStructToUrl(t *testing.T) {
 
 	actual, err := StructToUrl(data1)
 	if err != nil {
-		t.Errorf("test error %s", err.Error())
+		t.Errorf("example error %s", err.Error())
 		t.Fatal("invoke error")
 	} else {
 		t.Log("want is: ", want.Encode())
 		t.Log("actual is: ", actual.Encode())
 
 		if want.Encode() != actual.Encode() {
-			t.Fatal("test failed")
+			t.Fatal("example failed")
 		}
 	}
 
 	actual2, err := StructToUrl(data2)
 	if err != nil {
-		t.Errorf("test error %s", err.Error())
+		t.Errorf("example error %s", err.Error())
 		t.Fatal("invoke error")
 	} else {
 		t.Log("want is: ", want.Encode())
 		t.Log("actual is: ", actual2.Encode())
 
 		if want.Encode() != actual2.Encode() {
-			t.Fatal("test failed")
+			t.Fatal("example failed")
 		}
 	}
 	wantInner := url.Values{}
@@ -81,14 +81,14 @@ func TestStructToUrl(t *testing.T) {
 
 	actual3, err := StructToUrl(data3)
 	if err != nil {
-		t.Errorf("test error %s", err.Error())
+		t.Errorf("example error %s", err.Error())
 		t.Fatal("invoke error")
 	} else {
 		t.Log("want is: ", want.Encode())
 		t.Log("actual is: ", actual3.Encode())
 
 		if wantInner.Encode() != actual3.Encode() {
-			t.Fatal("test failed")
+			t.Fatal("example failed")
 		}
 	}
 }
