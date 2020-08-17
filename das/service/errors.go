@@ -14,6 +14,8 @@ var (
 	ErrSvcInner = errors.New("logic inner error")
 
 	ErrOk = errors.New("process ok")
+
+	ErrUnknown = errors.New("unknown error")
 )
 
 var (
@@ -28,6 +30,8 @@ var (
 	ErrCodeSvcInner int64 = 50001
 
 	ErrCodeOk int64 = 20000
+
+	ErrCodeUnknown int64 = 50002
 )
 
 func ErrMapToCode(err error) int64 {

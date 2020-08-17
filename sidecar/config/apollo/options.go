@@ -1,5 +1,11 @@
 package apollo
 
+import (
+	"fmt"
+	uuid2 "github.com/pborman/uuid"
+	"time"
+)
+
 type Option func(options *apolloOptions)
 
 type apolloOptions struct {
@@ -8,9 +14,11 @@ type apolloOptions struct {
 }
 
 func newApolloOptions() *apolloOptions {
+	s := time.Now().Unix()
+	uuid := uuid2.New()
 	return &apolloOptions{
 		Cluster:   "default",
-		CacheFile: "/tmp/.cfg",
+		CacheFile: fmt.Sprintf("/tmp/.%s-%s", s, uuid),
 	}
 }
 
@@ -30,6 +38,9 @@ func WithCache(f string) Option {
 
 func WithCluster(c string) Option {
 	return func(options *apolloOptions) {
+		if c == "" {
+			return
+		}
 		options.Cluster = c
 	}
 }

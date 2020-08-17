@@ -15,11 +15,10 @@ type Log struct {
 // config center
 //
 type ApolloParam struct {
+	Addr       string   `json:"addr"`
 	AppId      string   `json:"app_id"`
 	CfgServer  string   `json:"cfg_server"`
 	Cluster    string   `json:"cluster"`
-	LocalBak   string   `json:"local_bak"`
-	NameSpaces []string `json:"name_spaces"`
 }
 
 //

@@ -39,10 +39,6 @@ func (l loggingMiddleware) List(ctx context.Context, data map[string]interface{}
 }
 
 func (l loggingMiddleware) Create(ctx context.Context, data *model.User) (*model.User, error) {
-	sT := time.Now()
-	defer func(s time.Time) {
-		_ = l.log.Log("function", "Retrieve", "took", time.Since(s))
-	}(sT)
 	return l.Create(ctx, data)
 }
 
