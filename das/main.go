@@ -95,7 +95,7 @@ func main() {
 		"msg", "register service",
 		"service", common.ServiceName)
 	ends := endpoints.NewUsrEndpoints(svc)
-	handler := transport.NewRpcUsrSvc(ctx, ends)
+	handler := transport.NewRpcUsrSvc(ctx, logger, ends)
 
 	var discoverCli sd.Registrar
 	{
@@ -162,6 +162,7 @@ func main() {
 			"msg", "service is start",
 			"service", common.ServiceName,
 			"listen", lisAddr)
+
 		err := rpcServer.Serve(ls)
 		if err != nil {
 			logger.Log("file", "main.go",

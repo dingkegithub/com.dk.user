@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"github.com/dingkegithub/com.dk.user/das/endpoints"
 	"github.com/dingkegithub/com.dk.user/das/proto/userpb"
+	"github.com/dingkegithub/com.dk.user/utils/logging"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"time"
 )
 
 type rpcUsrTransport struct {
+	logger logging.Logger
+
 	create grpctransport.Handler
 
 	retrieve grpctransport.Handler
@@ -60,8 +63,10 @@ func (u *rpcUsrTransport) Update(ctx context.Context, r *userpb.UpdateRequest) (
 	return resp.(*userpb.UpdateResponse), nil
 }
 
-func NewRpcUsrSvc(ctx context.Context, endpoints *endpoints.UsrEndpoints) userpb.UserDasServiceServer {
-	return &rpcUsrTransport {
+func NewRpcUsrSvc(ctx context.Context, logger logging.Logger, endpoints *endpoints.UsrEndpoints) userpb.UserDasServiceServer {
+	return &rpcUsrTransport{
+		logger: logger,
+
 		create: grpctransport.NewServer(
 			endpoints.CreateEndpoint,
 			decodeCreateRequest,
@@ -87,4 +92,3 @@ func NewRpcUsrSvc(ctx context.Context, endpoints *endpoints.UsrEndpoints) userpb
 		),
 	}
 }
-
