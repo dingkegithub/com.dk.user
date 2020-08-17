@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"fmt"
 	"github.com/dingkegithub/com.dk.user/das/endpoints"
 	"github.com/dingkegithub/com.dk.user/das/proto/userpb"
 	"github.com/dingkegithub/com.dk.user/utils/logging"
@@ -23,13 +22,15 @@ type rpcUsrTransport struct {
 }
 
 func (u *rpcUsrTransport) Create(ctx context.Context, r *userpb.RegisterRequest) (*userpb.RegisterResponse, error) {
-	fmt.Println("file", "rpcusr.go", "function", "Create", "action", "invoke")
 	start := time.Now()
 	_, resp, err := u.create.ServeGRPC(ctx, r)
-	end := time.Since(start)
-	fmt.Println("file", "rpcusr.go", "function", "Create", "action", "ServeGRPC", "lost", end)
+	lost := time.Since(start)
+	u.logger.Log("file", "rpcusr.go",
+		"func", "Create",
+		"msg", "rpc ceate invoked",
+		"lost", lost)
+
 	if err != nil {
-		fmt.Println("file", "rpcusr.go", "function", "Create", "action", "server grpc error", "error", err)
 		return nil, err
 	}
 
@@ -37,7 +38,15 @@ func (u *rpcUsrTransport) Create(ctx context.Context, r *userpb.RegisterRequest)
 }
 
 func (u *rpcUsrTransport) Retrieve(ctx context.Context, r *userpb.RetrieveRequest) (*userpb.RetrieveResponse, error) {
+	start := time.Now()
 	_, resp, err := u.retrieve.ServeGRPC(ctx, r)
+	lost := time.Since(start)
+
+	u.logger.Log("file", "rpcusr.go",
+		"func", "Create",
+		"msg", "rpc retrieve invoked",
+		"lost", lost)
+
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +55,15 @@ func (u *rpcUsrTransport) Retrieve(ctx context.Context, r *userpb.RetrieveReques
 }
 
 func (u *rpcUsrTransport) List(ctx context.Context, r *userpb.ListRequest) (*userpb.ListResponse, error) {
+	start := time.Now()
 	_, resp, err := u.list.ServeGRPC(ctx, r)
+	lost := time.Since(start)
+
+	u.logger.Log("file", "rpcusr.go",
+		"func", "Create",
+		"msg", "rpc retrieve invoked",
+		"lost", lost)
+
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +72,14 @@ func (u *rpcUsrTransport) List(ctx context.Context, r *userpb.ListRequest) (*use
 }
 
 func (u *rpcUsrTransport) Update(ctx context.Context, r *userpb.UpdateRequest) (*userpb.UpdateResponse, error) {
+	start := time.Now()
 	_, resp, err := u.update.ServeGRPC(ctx, r)
+	lost := time.Since(start)
+
+	u.logger.Log("file", "rpcusr.go",
+		"func", "Create",
+		"msg", "rpc retrieve invoked",
+		"lost", lost)
 	if err != nil {
 		return nil, err
 	}

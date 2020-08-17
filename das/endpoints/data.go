@@ -8,12 +8,12 @@ type UsrCreateRequest struct {
 }
 
 type UsrUpdateRequest struct {
-	Uid string `json:"uid"`
+	Uid uint64 `json:"uid"`
 	Data map[string]interface{} `json:"data"`
 }
 
 type UsrRetrieveRequest struct {
-	Uid string `json:"uid"`
+	Uid uint64 `json:"uid"`
 }
 
 type UsrModelResponse struct {
@@ -31,5 +31,3 @@ type UsrListResponse struct {
 	Usr []*model.User
 	Err error
 }
-
-

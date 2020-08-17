@@ -27,12 +27,12 @@ service UserDasService {
 }
 
 message UserData {
-    string Uid = 1;
+    uint64 Uid = 1;
     string Name = 2;
 }
 
 message RegisterRequest {
-    string Uid = 1;
+    uint64 Uid = 1;
     string Name = 2;
     string Pwd = 3;
 }
@@ -44,7 +44,7 @@ message RegisterResponse {
 }
 
 message RetrieveRequest {
-    string Uid = 1;
+    uint64 Uid = 1;
 }
 
 message RetrieveResponse {
@@ -71,7 +71,7 @@ message ListResponse {
 }
 
 message UpdateRequest {
-    string Uid = 1;
+    uint64 Uid = 1;
     repeated KvItem Data = 2;
 }
 
