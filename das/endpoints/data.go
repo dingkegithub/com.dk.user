@@ -7,8 +7,8 @@ type UsrCreateRequest struct {
 }
 
 type UsrUpdateRequest struct {
-	Uid  uint64                 `json:"uid"`
-	Data map[string]interface{} `json:"data"`
+	Uid  uint64      `json:"uid"`
+	Data *model.User `json:"data"`
 }
 
 type UsrRetrieveRequest struct {
@@ -21,9 +21,9 @@ type UsrModelResponse struct {
 }
 
 type UsrListRequest struct {
-	Limit  int64                  `json:"limit"`
-	Offset int64                  `json:"offset"`
-	Data   map[string]interface{} `json:"data"`
+	Limit  int64         `json:"limit"`
+	Offset int64         `json:"offset"`
+	Data   []*model.User `json:"data"`
 }
 
 type UsrListResponse struct {

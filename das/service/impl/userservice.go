@@ -50,11 +50,17 @@ func (s *UserSrv) Retrieve(_ context.Context, uid uint64) (*model.User, error) {
 	return user, nil
 }
 
-func (s *UserSrv) List(_ context.Context, data map[string]interface{}, limit, offset int64) ([]*model.User, error) {
+func (s *UserSrv) List(_ context.Context, data []*model.User, limit, offset int64) ([]*model.User, error) {
 	db := model.DM().Db()
 
 	var users []*model.User
-	err := db.Model(&model.User{}).Where(data).Offset(offset).Limit(limit).Find(&users).Error
+
+	sql := db.Model(&model.User{})
+	for _, qs := range data {
+		sql = sql.Where(qs)
+	}
+
+	err := sql.Offset(offset).Limit(limit).Find(&users)
 	if err != nil {
 		s.logger.Log("file", "userservice.go",
 			"func", "List",

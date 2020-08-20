@@ -37,9 +37,8 @@ func decodeUpdateRequest(_ context.Context, r interface{}) (interface{}, error) 
 		return nil, service.ErrParam
 	}
 
-	updateData := make(map[string]interface{})
-	for _, v := range req.Data {
-		updateData[v.Key] = v.Val
+	updateData := &model.User{
+		Name: req.Data.Name,
 	}
 
 	return &endpoints.UsrUpdateRequest{
@@ -55,9 +54,11 @@ func decodeListRequest(_ context.Context, r interface{}) (interface{}, error) {
 		return nil, service.ErrParam
 	}
 
-	qs := make(map[string]interface{})
+	qs := make([]*model.User, 0, len(req.Qs))
 	for _, lq := range req.Qs {
-		qs[lq.Key] = lq.Val
+		qs = append(qs, &model.User{
+			Name: lq.Name,
+		})
 	}
 
 	return &endpoints.UsrListRequest{
@@ -76,8 +77,6 @@ func encodeModelResponse(_ context.Context, r interface{}) (interface{}, error) 
 	}
 
 	return &userpb.RegisterResponse{
-		//Err: service.ErrMapToCode(resp.Err),
-		//Msg: resp.Err.Error(),
 		Err: 20000,
 		Msg: "ok",
 		Data: &userpb.UserData{
