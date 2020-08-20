@@ -50,7 +50,7 @@ func (s *UserSrv) Retrieve(_ context.Context, uid uint64) (*model.User, error) {
 	return user, nil
 }
 
-func (s *UserSrv) List(_ context.Context, data *model.User, limit, offset int64) ([]*model.User, error) {
+func (s *UserSrv) List(_ context.Context, data map[string]interface{}, limit, offset int64) ([]*model.User, error) {
 	db := model.DM().Db()
 
 	var users []*model.User
@@ -92,5 +92,6 @@ func (s *UserSrv) Create(_ context.Context, usr *model.User) (*model.User, error
 		"func", "Create",
 		"msg", "insert new user failed",
 		"error", err)
+
 	return nil, service.ErrExist
 }
