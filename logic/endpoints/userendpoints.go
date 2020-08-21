@@ -13,6 +13,7 @@ import (
 //
 type UserEndpoints struct {
 	RegisterEndpoint endpoint.Endpoint
+	LoginEndpoint endpoint.Endpoint
 }
 
 //
@@ -21,6 +22,7 @@ type UserEndpoints struct {
 func NewUserLogicEndpoints(svc service.UserLogicService) *UserEndpoints {
 	return &UserEndpoints{
 		RegisterEndpoint:MakeRegisterEndpoint(svc),
+		LoginEndpoint: MakeLoginEndpoint(svc),
 	}
 }
 
@@ -46,3 +48,22 @@ func MakeRegisterEndpoint(svc service.UserLogicService) endpoint.Endpoint  {
 	}
 }
 
+func MakeLoginEndpoint(srv service.UserLogicService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*service.LoginRequest)
+
+		start := time.Now()
+		resp, err := srv.Login(ctx, req)
+		lost := time.Since(start)
+
+		fmt.Println("file", "userendpoints.go",
+			"func", "MakeLoginEndpoint",
+			"msg", "login request",
+			"lost", lost)
+		if err != nil {
+			return nil, err
+		}
+
+		return resp, err
+	}
+}

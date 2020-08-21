@@ -2,13 +2,15 @@ package impl
 
 import (
 	"context"
-	"fmt"
 	"github.com/dingkegithub/com.dk.user/logic/service"
 	"github.com/go-kit/kit/log"
-	"github.com/hashicorp/go-uuid"
 	"golang.org/x/crypto/bcrypt"
+	"sync/atomic"
 	"time"
 )
+
+
+var tmpIdGenerate uint64 = 0
 
 type userLogicSvc struct {
 	logger log.Logger
@@ -20,37 +22,49 @@ func NewUserLogicService(logger log.Logger) service.UserLogicService  {
 	}
 }
 
-func (u *userLogicSvc) Register(ctx context.Context, request *service.RegisterUsrRequest) (*service.RegisterUsrResponse, error) {
-	u.logger.Log("file", "usersvc.go", "function", "Register", "action", "check password")
+func (u *userLogicSvc) Login(ctx context.Context, request *service.LoginRequest) (*service.Response, error) {
+	if request.Name == "" || request.Pwd == "" {
+		return nil, service.ErrorParaPassword
+	}
+
+	return nil, nil
+}
+
+func (u *userLogicSvc) Register(ctx context.Context, request *service.RegisterUsrRequest) (*service.Response, error) {
 	rs := time.Now()
 	defer func() {
-		u.logger.Log("file", "usersvc.go", "function", "Register", "defer", time.Since(rs))
+		u.logger.Log("file", "usersvc.go",
+			"func", "Register",
+			"msg", "register user",
+			"lost", time.Since(rs))
 	}()
+
 	if request.Pwd != request.PwdAgain {
 		return nil, service.ErrorParaPassword
 	}
 
-	u.logger.Log("file", "usersvc.go", "function", "Register", "action", "generate password")
 	s := time.Now()
 	//pwd, err := bcrypt.GenerateFromPassword([]byte(request.Pwd), bcrypt.DefaultCost)
 	pwd, err := bcrypt.GenerateFromPassword([]byte(request.Pwd), 4)
 	e := time.Since(s)
-	u.logger.Log("file", "usersvc.go", "function", "Register", "action", "generate password", "lost", e)
+	u.logger.Log("file", "usersvc.go",
+		"func", "Register",
+		"msg", "generate password",
+		"lost", e)
+
 	if err != nil {
 		return nil, service.ErrorServerInternal
 	}
 
-	request.Pwd = string(pwd)
-	request.PwdAgain = string(pwd)
-
-	u.logger.Log("file", "usersvc.go", "function", "Register", "action", "generate user id")
-	uid, err := uuid.GenerateUUID()
-	if err != nil {
-		fmt.Println("generate uid error")
-		return nil, service.ErrorServerInternal
-	}
-	request.Uid = uid
-
-	u.logger.Log("file", "usersvc.go", "function", "Register", "action", "return")
-	return nil, nil
+	return &service.Response{
+		Error: 0,
+		Msg:   "ok",
+		Data:  &service.RegisterUsrRequest{
+			Uid:      atomic.AddUint64(&tmpIdGenerate, 1),
+			Name:     request.Name,
+			Pwd:      string(pwd),
+			PwdAgain: string(pwd),
+			Age:      0,
+		},
+	}, nil
 }

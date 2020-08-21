@@ -82,6 +82,7 @@ func encodeModelResponse(_ context.Context, r interface{}) (interface{}, error) 
 		Data: &userpb.UserData{
 			Uid:  resp.Usr.Uid,
 			Name: resp.Usr.Name,
+			Pwd:  resp.Usr.Pwd,
 		},
 	}, nil
 }
@@ -97,6 +98,7 @@ func encodeModelListResponse(_ context.Context, r interface{}) (interface{}, err
 		usrData = append(usrData, &userpb.UserData{
 			Uid:                  usr.Uid,
 			Name:                 usr.Name,
+			Pwd:                  usr.Pwd,
 		})
 	}
 

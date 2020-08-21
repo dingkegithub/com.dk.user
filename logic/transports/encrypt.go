@@ -31,7 +31,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter)  {
  * @param req http请求
  * @return http请求转换为站点输入参数
  */
-func decodeRegisterRequest(ctx context.Context, req *http.Request) (interface{}, error) {
+func decodeRegisterRequest(_ context.Context, req *http.Request) (interface{}, error) {
 	defer func() {
 		_ = req.Body.Close()
 	}()
@@ -50,6 +50,25 @@ func decodeRegisterRequest(ctx context.Context, req *http.Request) (interface{},
 	return registerReq, nil
 }
 
+func decodeLoginRequest(_ context.Context, req *http.Request) (interface{}, error) {
+	defer func() {
+		_ = req.Body.Close()
+	}()
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	loginReq := &service.LoginRequest{}
+	err = json.Unmarshal(data, &loginReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return loginReq, nil
+}
+
 /**
  * 站点响应写入http响应
  *
@@ -57,7 +76,7 @@ func decodeRegisterRequest(ctx context.Context, req *http.Request) (interface{},
  * @param rw http响应
  * @param resp 站点响应
  */
-func encodeRegisterResponse(ctx context.Context, rw http.ResponseWriter, resp interface{}) error {
+func encodeResponse(ctx context.Context, rw http.ResponseWriter, resp interface{}) error {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	return json.NewEncoder(rw).Encode(resp)
 }

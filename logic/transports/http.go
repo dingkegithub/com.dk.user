@@ -31,7 +31,14 @@ func MakeUserSvcHttpHandler(ctx context.Context, endpoints *usrep.UserEndpoints,
 	route.Methods("POST").Path("/api/register").Handler(kithttp.NewServer(
 		endpoints.RegisterEndpoint,
 		decodeRegisterRequest,
-		encodeRegisterResponse,
+		encodeResponse,
+		options...,
+	))
+
+	route.Methods("POST").Path("/api/login").Handler(kithttp.NewServer(
+		endpoints.LoginEndpoint,
+		decodeLoginRequest,
+		encodeResponse,
 		options...,
 	))
 

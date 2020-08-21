@@ -29,6 +29,7 @@ service UserDasService {
 message UserData {
     uint64 Uid = 1;
     string Name = 2;
+    string Pwd = 3;
 }
 
 message RegisterRequest {

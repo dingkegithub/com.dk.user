@@ -2,6 +2,7 @@ package proxymiddleware
 
 import (
 	"context"
+	"github.com/dingkegithub/com.dk.user/das/proto/userpb"
 	"github.com/dingkegithub/com.dk.user/logic/common"
 	"github.com/dingkegithub/com.dk.user/logic/service"
 	"github.com/dingkegithub/com.dk.user/sidecar/discovery"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd"
 	"github.com/go-kit/kit/sd/lb"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -18,7 +20,7 @@ import (
 //
 func UserLogicProxy(ctx context.Context, logger log.Logger, cli discovery.RegisterCenterClient) service.UserLogicServiceMiddleware {
 	var (
-		maxAttempts = 3   // 失败尝试次数
+		maxAttempts = 3 // 失败尝试次数
 		maxTime     = 250 * time.Millisecond
 	)
 
@@ -45,15 +47,19 @@ func UserLogicProxy(ctx context.Context, logger log.Logger, cli discovery.Regist
 	}
 
 	// 可用服务站点
-	endpointer := sd.NewEndpointer(instance, NewServiceFactory, logger)
+	registerEps := sd.NewEndpointer(instance, NewRegisterFactory, logger)
+	loginEps := sd.NewEndpointer(instance, NewSvcLoginFactory, logger)
 
 	// 将站点加入到负载均衡器
-	balancer := lb.NewRoundRobin(endpointer)
-	retry := lb.Retry(maxAttempts, maxTime, balancer)
+	registerBalancer := lb.NewRoundRobin(registerEps)
+	registerRetry := lb.Retry(maxAttempts, maxTime, registerBalancer)
+
+	loginBalance := lb.NewRoundRobin(loginEps)
+	loginRetry := lb.Retry(maxAttempts, maxTime, loginBalance)
 
 	// 返回含有服务发现，负载均衡的service
 	return func(svc service.UserLogicService) service.UserLogicService {
-		return NewUsrLogicProxy(ctx, svc, logger, retry)
+		return NewUsrLogicProxy(ctx, svc, logger, registerRetry, loginRetry)
 	}
 }
 
@@ -62,14 +68,16 @@ type UsrLogicProxy struct {
 	ctx                 context.Context
 	nxt                 service.UserLogicService
 	registerRpcEndpoint endpoint.Endpoint
+	loginRpcEndpoint    endpoint.Endpoint
 }
 
-func NewUsrLogicProxy(ctx context.Context, svc service.UserLogicService, logger log.Logger, ep endpoint.Endpoint) service.UserLogicService {
+func NewUsrLogicProxy(ctx context.Context, svc service.UserLogicService, logger log.Logger, registerEps endpoint.Endpoint, loginEps endpoint.Endpoint) service.UserLogicService {
 	return &UsrLogicProxy{
 		logger:              logger,
 		ctx:                 ctx,
 		nxt:                 svc,
-		registerRpcEndpoint: ep,
+		registerRpcEndpoint: registerEps,
+		loginRpcEndpoint:    loginEps,
 	}
 }
 
@@ -77,18 +85,16 @@ func NewUsrLogicProxy(ctx context.Context, svc service.UserLogicService, logger 
 // 用户注册接口
 // Endpoint 调用
 //
-func (u *UsrLogicProxy) Register(ctx context.Context, request *service.RegisterUsrRequest) (*service.RegisterUsrResponse, error) {
+func (u *UsrLogicProxy) Register(ctx context.Context, request *service.RegisterUsrRequest) (*service.Response, error) {
 
-	u.logger.Log("file", "userproxy.go", "function", "Register", "action", "invoke Register")
-	// 服务一层一层，如同洋葱一般包裹，每一层接口相同
 	rs := time.Now()
 	_, err := u.nxt.Register(ctx, request)
 	re := time.Since(rs)
 	if err != nil {
-		u.logger.Log("file", "userproxy.go", "function", "Register", "action", "invoke next Register", "error", err)
+		u.logger.Log("file", "userproxy.go",
+			"function", "Register", "action", "invoke next Register", "error", err)
 		return nil, err
 	}
-
 
 	u.logger.Log("file", "userproxy.go", "function", "Register", "action", "rpc invoke", "lost", re)
 	// 调用 rpc 接口, 这里有loadbalance 包裹
@@ -101,5 +107,66 @@ func (u *UsrLogicProxy) Register(ctx context.Context, request *service.RegisterU
 		return nil, err
 	}
 
-	return resp.(*service.RegisterUsrResponse), nil
+	return resp.(*service.Response), nil
+}
+
+func (u *UsrLogicProxy) Login(ctx context.Context, request *service.LoginRequest) (*service.Response, error) {
+	// 调用 rpc 接口, 这里有loadbalance 包裹
+	start := time.Now()
+	resp, err := u.loginRpcEndpoint(ctx, request)
+	end := time.Since(start)
+	u.logger.Log("file", "userproxy.go", "func", "Login", "action", "rpc invoke", "lost", end)
+
+	if err != nil {
+		u.logger.Log("file", "userproxy.go", "function", "Login", "action", "rpc invoke", "error", err)
+		return nil, err
+	}
+
+	response := resp.(*service.Response)
+
+	data := response.Data.([]*userpb.UserData)
+	if len(data) > 1 {
+		return &service.Response{
+			Error: service.ErrorCodeParaPassword,
+			Msg:   service.ErrMsg(service.ErrorCodeParaPassword).Error(),
+			Data:  nil,
+		}, nil
+	}
+
+	if len(data) <= 0 {
+		return &service.Response{
+			Error: service.ErrorCodeParaPassword,
+			Msg:   service.ErrMsg(service.ErrorCodeParaPassword).Error(),
+			Data:  nil,
+		}, nil
+	}
+
+	userInfo := data[0]
+	pwd, err := bcrypt.GenerateFromPassword([]byte(request.Pwd), 4)
+	if err != nil {
+		return &service.Response{
+			Error: service.ErrorCodeServerInternal,
+			Msg:   service.ErrMsg(service.ErrorCodeServerInternal).Error(),
+			Data:  nil,
+		}, nil
+	}
+
+	if string(pwd) != userInfo.Pwd {
+		return &service.Response{
+			Error: service.ErrorCodeParaPassword,
+			Msg:   service.ErrMsg(service.ErrorCodeParaPassword).Error(),
+			Data:  nil,
+		}, nil
+	}
+
+	token := ""
+
+	return &service.Response{
+		Error: 0,
+		Msg:   "ok",
+		Data:  service.LoginToken{
+			Uid:   userInfo.Uid,
+			Token: token,
+		},
+	}, nil
 }

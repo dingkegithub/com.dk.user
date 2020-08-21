@@ -3,9 +3,9 @@ package service
 import "context"
 
 type UserLogicService interface {
-	Register(ctx context.Context, request *RegisterUsrRequest) (*RegisterUsrResponse, error)
+	Register(ctx context.Context, request *RegisterUsrRequest) (*Response, error)
 
-	//Login()
+	Login(ctx context.Context, request *LoginRequest) (*Response, error)
 	//
 	//Logout()
 	//
